@@ -3,8 +3,14 @@ import time
 import requests
 import sys
 
+import os
+
 BASE_URL = "http://localhost:8000/api"
-GOLDEN_REPOS_FILE = "backend/rules/golden_repos.json"
+# Check if running in container (/app) or locally
+if os.path.exists("/app/rules/golden_repos.json"):
+    GOLDEN_REPOS_FILE = "/app/rules/golden_repos.json"
+else:
+    GOLDEN_REPOS_FILE = "backend/rules/golden_repos.json"
 
 def load_repos():
     with open(GOLDEN_REPOS_FILE, "r") as f:

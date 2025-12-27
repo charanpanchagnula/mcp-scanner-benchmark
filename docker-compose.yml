@@ -8,6 +8,7 @@ services:
       - "3000:8000" # Support legacy frontend port
     volumes:
       - ./backend:/app
+      - ./scripts:/app/scripts
       - /app/.venv
       - /app/scanners/mcp_watch_tool/node_modules # Don't overwrite node_modules
     command: [ "uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]

@@ -66,6 +66,22 @@ graph TD
    docker compose up --build
    ```
 
+## running Full Benchmark Suite
+
+We provide a master script to completely reset the environment and run scans against the entire Golden Repository list.
+
+```bash
+./run_full_benchmark.sh
+```
+
+**What this script does:**
+1.  **Tears Down**: Stops all running Docker containers.
+2.  **Cleans**: Deletes all previous scan history (`scan_results/` and `scan_index.json`).
+3.  **Rebuilds**: Runs a clean build of the backend and frontend.
+4.  **Executes**: Sequentially triggers both Static and Dynamic scans for every repo in `backend/rules/golden_repos.json`.
+
+**Note**: This process will take significant time as it runs dynamic fuzzing against multiple targets.
+
 4. **Access the application**:
    - Frontend: [http://localhost:3000](http://localhost:3000)
    - Backend API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
