@@ -41,7 +41,8 @@ class MCPWatchWrapper(BaseScanner):
                 # mcp-watch needs the directory containing the config, not the config itself
                 target_dir = os.path.dirname(config)
                 try:
-                    cmd = ["mcp-watch", target_dir]
+                    # Invoke directly with node since it's not in global path
+                    cmd = ["node", script_path, target_dir]
                     result = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=60)
                     vulns = self._parse_watch_output(result.stdout, os.path.basename(config))
                     all_vulns.extend(vulns)
