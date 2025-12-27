@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+backend/.venv/
+venv/
+env/
+
+# Python/UV/Testing
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.uv/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node
+node_modules/
+frontend/node_modules/
+.next/
+frontend/.next/
+frontend/out/
+
+# Environment Variables
+.env
+backend/.env
+frontend/.env.local
+
+# Project Specific
+backend/temp_scans/
+backend/scan_results/
+backend/scan_index.json
+backend/scanners/mcp_watch_tool/node_modules/
+backend/scanners/mcp_watch_tool/dist/
+
+# System
+.DS_Store

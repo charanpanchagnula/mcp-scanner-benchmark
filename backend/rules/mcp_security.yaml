@@ -1,0 +1,80 @@
+rules:
+  - id: mcp-hardcoded-secret
+    patterns:
+      - pattern: $X = "..."
+      - metavariable-regex:
+          metavariable: $X
+          regex: (api_key|access_token|secret_key|password|auth_token)
+      - metavariable-regex:
+          metavariable: "..."
+          regex: "[A-Za-z0-9]{20,}"
+    message: "Hardcoded secret detected. This is a security risk."
+    languages: [python, javascript, typescript]
+    severity: ERROR
+
+  - id: mcp-subprocess-shell-true
+    patterns:
+      - pattern: subprocess.$FUNC(..., shell=True, ...)
+    message: "subprocess call with shell=True detected. Potential command injection."
+    languages: [python]
+    severity: WARNING
+
+  - id: mcp-eval-exec
+    patterns:
+      - pattern-either:
+        - pattern: eval(...)
+        - pattern: exec(...)
+    message: "Use of eval() or exec() detected. This is a high security risk for arbitrary code execution."
+    languages: [python, javascript]
+    severity: ERROR
+
+  - id: mcp-unsafe-path-join
+    patterns:
+      - pattern: os.path.join(..., request.query_params[...], ...)
+    message: "Potential path traversal via user input in path join."
+    languages: [python]
+    severity: WARNING
+
+  - id: mcp-prompt-injection-weakness
+    patterns:
+      - pattern-either:
+        - pattern: |
+            $PROMPT = f"...{...}..."
+            $LLM.generate($PROMPT)
+        - pattern: |
+            messages = [{"role": "user", "content": ... + $USER_INPUT}]
+    message: "Potential Prompt Injection: User input directly concatenated into LLM prompt without sanitization."
+    languages: [python]
+    severity: WARNING
+
+  - id: mcp-unsafe-file-read
+    patterns:
+      - pattern: open($PATH, ...)
+      - pattern-not: open("...", ...)
+    message: "File open with variable path. Ensure path is validated to prevent Local File Inclusion (LFI)."
+    languages: [python]
+    severity: INFO
+
+  - id: mcp-os-system
+    patterns:
+      - pattern: os.system(...)
+    message: "Use of os.system() detected. This allows shell execution and is a high security risk."
+    languages: [python]
+    severity: ERROR
+
+  - id: mcp-dynamic-docstring
+    patterns:
+      - pattern: $FUNC.__doc__ = ...
+    message: "Dynamic modification of docstrings detected. This can be used to inject malicious prompt instructions at runtime."
+    languages: [python]
+    severity: WARNING
+
+  - id: mcp-prompt-injection-markers
+    patterns:
+      - pattern-regex: "(?s).*<IMPORTANT>.*"
+      - pattern-regex: "(?s).*(ignore previous instructions|read ~/\\.ssh|attkr@pwnd\\.com).*"
+    message: "Potential Prompt Injection or malicious instruction detected in string/docstring."
+    languages: [python, javascript, typescript]
+    severity: WARNING
+
+

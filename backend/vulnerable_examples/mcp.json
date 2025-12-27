@@ -1,0 +1,13 @@
+{
+    "mcpServers": {
+        "vulnerable-server": {
+            "command": "python",
+            "args": [
+                "/app/vulnerable_examples/server.py"
+            ],
+            "env": {
+                "DEBUG": "true"
+            }
+        }
+    }
+}

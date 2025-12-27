@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+      - "3000:8000" # Support legacy frontend port
+    volumes:
+      - ./backend:/app
+      - /app/.venv
+      - /app/scanners/mcp_watch_tool/node_modules # Don't overwrite node_modules
+    command: [ "uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
+      # Exclude static folder from overwrite if mapped locally, though inside container it's in /app/static
+      # Actually, since we copy 'static' in Dockerfile, mounting ./backend:/app might hide it if not careful.
+      # The Dockerfile WORKDIR is /app.
+      # It copies backend/. to /app/.
+      # It copies static to /app/static.
+      # If we mount ./backend:/app, the local ./backend folder (which doesn't have 'static') will OVERRIDE /app.
+      # This is a classic docker bind mount issue.
+      # SOLUTION: Use an anonymous volume for /app/static to preserve the built files.
+      # - /app/static
+    environment:
+
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge
