@@ -28,46 +28,36 @@ class GitHubService:
         if os.path.exists(target_dir):
             shutil.rmtree(target_dir)
 
-        # Construct zip url (e.g. https://github.com/user/repo/archive/refs/heads/main.zip)
-        # Handle .git suffix if present
-        if url.endswith(".git"):
-            url = url[:-4]
-        
-        zip_url = f"{url}/archive/refs/heads/{branch}.zip"
-        print(f"Downloading source code from {zip_url}...", flush=True)
+        print(f"Cloning {url} to {target_dir}...", flush=True)
         
         try:
-            # Use a browser-like User-Agent to avoid 504/403 errors from GitHub
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+            import subprocess
+            # Ensure url ends with .git for consistency, though not strictly required
+            if not url.endswith(".git"):
+                clone_url = f"{url}.git"
+            else:
+                clone_url = url
             
-            # Use streaming to handle large files (avoid OOM and show progress)
-            # Increased timeout to 300s (5 min) because this repo is ~860MB
-            with httpx.Client(follow_redirects=True, timeout=300.0, verify=False, headers=headers) as client:
-                with client.stream("GET", zip_url) as response:
-                    response.raise_for_status()
-                    
-                    zip_path = os.path.join(self.temp_dir, f"{scan_id}.zip")
-                    with open(zip_path, "wb") as f:
-                        for chunk in response.iter_bytes(chunk_size=8192):
-                            f.write(chunk)
-            
-            print(f"Download complete. Extracting {zip_path}...", flush=True)
+            # Try specified branch first
             try:
-                with zipfile.ZipFile(zip_path, 'r') as z:
-                    z.extractall(target_dir)
-            finally:
-                if os.path.exists(zip_path):
-                    os.remove(zip_path)
-                    
-            # Move contents one level up if nested (GitHub zips usually are repo-branch/content)
-            extracted_folders = [f for f in os.listdir(target_dir) if os.path.isdir(os.path.join(target_dir, f))]
-            if len(extracted_folders) == 1:
-                inner_dir = os.path.join(target_dir, extracted_folders[0])
-                for item in os.listdir(inner_dir):
-                    shutil.move(os.path.join(inner_dir, item), target_dir)
-                os.rmdir(inner_dir)
-                
+                subprocess.run(
+                    ["git", "clone", "--depth", "1", "--branch", branch, clone_url, target_dir],
+                    check=True, capture_output=True, text=True
+                )
+            except subprocess.CalledProcessError:
+                # Fallback to default branch if 'main' was requested but failed
+                if branch == "main":
+                    print(f"Clone with branch 'main' failed. Retrying with default branch...", flush=True)
+                    subprocess.run(
+                        ["git", "clone", "--depth", "1", clone_url, target_dir],
+                        check=True, capture_output=True, text=True
+                    )
+                else:
+                    raise
+
             return os.path.abspath(target_dir)
-            
+
+        except subprocess.CalledProcessError as e:
+            raise Exception(f"Failed to clone repository: {e.stderr}")
         except Exception as e:
-            raise Exception(f"Failed to download repository source: {str(e)}")
+            raise Exception(f"Failed to clone repository: {str(e)}")
